@@ -1,8 +1,9 @@
 ### CLEAN THE DATA ###
 rm(list=ls())
 #print(list.files())
+data_path = "../data/"
 
-fichiers = list.files(".",pattern=".csv")
+fichiers = list.files(data_path, pattern=".csv")
 nbFichiers = length(fichiers)
 
 top15trials = c()
@@ -118,14 +119,14 @@ data_for_plot = data.frame(
 
 ggplot(data_for_plot, aes(x = "", y = Fraction, fill = Category)) +
   geom_bar(stat = "identity", width = 0.5) +
-  geom_text(aes(label = paste0(round(Fraction * 100, 1), "%")), 
+  geom_text(aes(label = paste0(round(Fraction * 100, 1), "%")),
             position = position_stack(vjust = 0.5)) +
-  labs(title = "Congruency Fraction of Reinforce side and fountains", 
-       y = "Fraction", 
+  labs(title = "Congruency Fraction of Reinforce side and fountains",
+       y = "Fraction",
        x = "") +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal() +
-  theme(axis.text.x = element_blank(), 
+  theme(axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
 
 ### Bar graph ###
@@ -143,12 +144,12 @@ data_for_plot <- data.frame(
 # Create the bar plot with error bars
 ggplot(data_for_plot, aes(x = Category, y = Fraction)) +
   geom_bar(stat = "identity", fill = "skyblue", width = 0.5) +
-  geom_errorbar(aes(ymin = Fraction - SE, ymax = Fraction + SE), 
+  geom_errorbar(aes(ymin = Fraction - SE, ymax = Fraction + SE),
                 width = 0.2, color = "black") +
-  geom_text(aes(label = paste0(round(Fraction * 100, 1), "%")), 
+  geom_text(aes(label = paste0(round(Fraction * 100, 1), "%")),
             vjust = -0.5) +
-  labs(title = "Fraction of congruency effect of reinforced gate and the fountain side with SEM", 
-       y = "Fraction", 
+  labs(title = "Fraction of congruency effect of reinforced gate and the fountain side with SEM",
+       y = "Fraction",
        x = "") +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal()
@@ -183,12 +184,12 @@ data_for_plot <- data.frame(
 
 ggplot(data_for_plot, aes(x = Category, y = Fraction)) +
   geom_bar(stat = "identity", fill = c("yellow", "blue"), width = 0.5) +
-  geom_errorbar(aes(ymin = Fraction - SE, ymax = Fraction + SE), 
+  geom_errorbar(aes(ymin = Fraction - SE, ymax = Fraction + SE),
                 width = 0.2, color = "black") +
-  geom_text(aes(label = paste0(round(Fraction * 100, 1), "%")), 
+  geom_text(aes(label = paste0(round(Fraction * 100, 1), "%")),
             vjust = -0.5) +
-  labs(title = "Fraction of Reinforced effect of colour and side on the fountain", 
-       y = "Fraction", 
+  labs(title = "Fraction of Reinforced effect of colour and side on the fountain",
+       y = "Fraction",
        x = "") +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal()
@@ -196,7 +197,9 @@ ggplot(data_for_plot, aes(x = Category, y = Fraction)) +
 #### Task 03 ###
 ### We extract the data of the gate_test, take the time of gate_test that smaller
 ### than the time of first fountain visit, then take the max value gate_test time
-### We calculate then the latency = fountain time - gate_test time
+### We calculate then the latency = fountain time - gate_test time for each trials
+
+### If the code doesn't work - print the line 204 - 205 in the terminal/console
 
 library(survival)
 library(survminer)
@@ -241,6 +244,13 @@ for (k in 1:nbtop15) {
   }
 }
 
+
+### Create the survival curve ###
+### 01. Create first the data frame with all the latency-trial lists
+### Here: https://biostatistique.vetagro-sup.fr/guideR_Cox.pdf
+### 02. Create Survival Object -> Compute the survival curve with fit Kaplan - No idea =))
+
+
 latency_data = data.frame(
   Latency = c(list_latency_1, list_latency_5, list_latency_10, list_latency_15),
   Trial = factor(c(rep(1, length(list_latency_1)),
@@ -249,19 +259,31 @@ latency_data = data.frame(
                    rep(15, length(list_latency_15))))
 )
 
-print(latency_data)
+#print(latency_data)
 
 surv_obj = Surv(time = latency_data$Latency)
 
 fit = survfit(Surv(Latency) ~ Trial, data = latency_data)
 
-ggsurvplot(fit, 
+### 03. Print the table to check the time each bee reach the zone ###
+print(summary(fit))
+
+### 04. Plot plot plot ###
+
+### Plot moche ###
+plot(fit, mark.time = TRUE, palette = c("#E7B800", "#2E9FDF", "#D95F02", "#7570B3"), title = "Survival Curves for Latency by Trial",
+xlab = "Time (seconds)",
+ylab = "Proportion of Bees Not Reaching Fountain"
+)
+
+### Joli plot =)) ###
+ggsurvplot(fit,
            data = latency_data,
-           risk.table = TRUE,          # Display risk table
-           pval = TRUE,                # Show p-value for log-rank test
-           conf.int = TRUE,            # Show confidence intervals
-           ggtheme = theme_minimal(),  # Use a minimal theme
-           palette = c("#E7B800", "#2E9FDF", "#D95F02", "#7570B3"),  # Colors for different trials
+           risk.table = TRUE,
+           pval = TRUE,
+           conf.int = TRUE,
+           ggtheme = theme_minimal(),
+           palette = c("#E7B800", "#2E9FDF", "#D95F02", "#7570B3"),
            title = "Survival Curves for Latency by Trial",
            xlab = "Time (seconds)",
            ylab = "Proportion of Bees Not Reaching Fountain")
